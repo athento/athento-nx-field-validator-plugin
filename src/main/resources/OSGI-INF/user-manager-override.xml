@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<component name="org.athento.nuxeo.ecm.platform.usermanager.override">
+
+	<extension target="org.nuxeo.ecm.platform.usermanager.UserService"
+		point="userManager">
+		<userManager class="org.athento.nuxeo.ecm.platform.usermanager.AthentoUserManagerImpl">
+		</userManager>
+	</extension>
+
+</component>
