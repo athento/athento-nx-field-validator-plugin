@@ -1,4 +1,4 @@
-# nuxeo-field-validator-plugin
+# athento-nx-field-validator-plugin
 
 ## Synopsis
 
