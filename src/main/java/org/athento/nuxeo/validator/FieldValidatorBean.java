@@ -34,25 +34,6 @@ public class FieldValidatorBean implements Serializable {
 		return true;
 	}
 
-	public void validateText(FacesContext context, UIComponent component,
-			Object value) {
-		if (_log.isDebugEnabled()) {
-			_log.debug("Validating text: " + value);
-		}
-		String theValue = (String) value;
-		String expression = "^[a-zA-Z0-9]{0,30}$";
-		if (isValid(theValue, expression)) {
-			// do nothing as the given string is well-formed
-			return;
-		} else {
-			// display an error in the input form
-			FacesMessage message = new FacesMessage(
-					FacesMessage.SEVERITY_ERROR, ComponentUtils.translate(
-							context, "label.error.validator.text"), null);
-			throw new ValidatorException(message);
-		}
-	}
-
 	public void validateEmailAddress(FacesContext context,
 			UIComponent component, Object value) {
 		if (_log.isDebugEnabled()) {
@@ -167,6 +148,25 @@ public class FieldValidatorBean implements Serializable {
 					FacesMessage.SEVERITY_ERROR, ComponentUtils.translate(
 							context, "label.error.validator.homePhoneNumber"),
 					null);
+			throw new ValidatorException(message);
+		}
+	}
+
+	public void validateText(FacesContext context, UIComponent component,
+			Object value) {
+		if (_log.isDebugEnabled()) {
+			_log.debug("Validating text: " + value);
+		}
+		String theValue = (String) value;
+		String expression = "^[a-zA-Z0-9]{0,30}$";
+		if (isValid(theValue, expression)) {
+			// do nothing as the given string is well-formed
+			return;
+		} else {
+			// display an error in the input form
+			FacesMessage message = new FacesMessage(
+					FacesMessage.SEVERITY_ERROR, ComponentUtils.translate(
+							context, "label.error.validator.text"), null);
 			throw new ValidatorException(message);
 		}
 	}
