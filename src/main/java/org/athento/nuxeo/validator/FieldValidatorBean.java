@@ -4,11 +4,13 @@
 package org.athento.nuxeo.validator;
 
 import java.io.Serializable;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.faces.application.FacesMessage;
 import javax.faces.component.UIComponent;
+import javax.faces.component.UIInput;
 import javax.faces.context.FacesContext;
 import javax.faces.validator.ValidatorException;
 import javax.xml.bind.ValidationException;
@@ -34,21 +36,49 @@ public class FieldValidatorBean implements Serializable {
 		return true;
 	}
 
-	public void validateText(FacesContext context, UIComponent component,
+	public void validateBankAccountNumber_byParts(FacesContext context, UIComponent component,
 			Object value) {
-		if (_log.isDebugEnabled()) {
-			_log.debug("Validating text: " + value);
-		}
-		String theValue = (String) value;
-		String expression = "^[a-zA-Z0-9]{0,30}$";
-		if (isValid(theValue, expression)) {
+		String bankCode = retrieveInputComponentValue_asString(component,
+				"bankCodeInputId");
+		String branchCode = retrieveInputComponentValue_asString(component,
+				"branchCodeInputId");
+		String controlDigit = retrieveInputComponentValue_asString(component,
+				"dcInputId");
+		String accountNumber = retrieveInputComponentValue_asString(component,
+				"accountNumberInputId");
+		if (isValidBankAccountNumber(bankCode, branchCode, controlDigit, accountNumber)) {
 			// do nothing as the given string is well-formed
 			return;
 		} else {
 			// display an error in the input form
 			FacesMessage message = new FacesMessage(
 					FacesMessage.SEVERITY_ERROR, ComponentUtils.translate(
-							context, "label.error.validator.text"), null);
+							context,
+							"label.error.validator.bank.account.number"), null);
+			throw new ValidatorException(message);
+		}
+	}
+
+	public void validateBankAccountNumber_allInOne(FacesContext context,
+			UIComponent component, Object value) {
+		if (_log.isDebugEnabled()) {
+			_log.debug("Validating bank account: " + value);
+		}
+		String ban = (String) value;
+		String bankCode = ban.substring(0, 4);
+		String branchCode = ban.substring(4, 8);
+		String controlDigit = ban.substring(8, 10);
+		String accountNumber = ban.substring(10, 20);
+
+		if (isValidBankAccountNumber(bankCode, branchCode, controlDigit, accountNumber)) {
+			// do nothing as the given string is well-formed
+			return;
+		} else {
+			// display an error in the input form
+			FacesMessage message = new FacesMessage(
+					FacesMessage.SEVERITY_ERROR, ComponentUtils.translate(
+							context,
+							"label.error.validator.bank.account.number"), null);
 			throw new ValidatorException(message);
 		}
 	}
@@ -171,6 +201,34 @@ public class FieldValidatorBean implements Serializable {
 		}
 	}
 
+	public void validateText(FacesContext context, UIComponent component,
+			Object value) {
+		if (_log.isDebugEnabled()) {
+			_log.debug("Validating text: " + value);
+		}
+		String theValue = (String) value;
+		String expression = "^[a-zA-Z0-9]{0,30}$";
+		if (isValid(theValue, expression)) {
+			// do nothing as the given string is well-formed
+			return;
+		} else {
+			// display an error in the input form
+			FacesMessage message = new FacesMessage(
+					FacesMessage.SEVERITY_ERROR, ComponentUtils.translate(
+							context, "label.error.validator.text"), null);
+			throw new ValidatorException(message);
+		}
+	}
+
+	private String getControlDigit(String bankCode, String branchCode,
+			String accountNumber) {
+		String rsum1;
+		String rsum2;
+		rsum1 = mod11("00" + bankCode + branchCode);
+		rsum2 = mod11(accountNumber);
+		return rsum1 + rsum2;
+	}
+
 	private boolean isValid(String value, String regexp) {
 		if (_log.isDebugEnabled()) {
 			_log.debug("Validating [" + value + "] against regexp [" + regexp
@@ -207,6 +265,40 @@ public class FieldValidatorBean implements Serializable {
 			}
 			return false;
 		}
+	}
+
+	private String mod11(String str) {
+		int[] digits = new int[] { 1, 2, 4, 8, 5, 10, 9, 7, 3, 6 };
+		int sum = 0;
+		for (int i = 0; i != 10; i++) {
+			sum += (Integer.parseInt(str.substring(i, i + 1)) * digits[i]);
+		}
+		sum = 11 - sum % 11;
+		if (sum == 11)
+			sum = 0;
+		if (sum == 10)
+			sum = 1;
+		return String.valueOf(sum);
+	}
+
+	private Object retrieveInputComponentValue(UIComponent anchor,
+			String componentId) {
+		Map attributes = anchor.getAttributes();
+		String inputId = (String) attributes.get(componentId);
+		UIInput component = (UIInput) anchor.findComponent(inputId);
+		return component.getLocalValue();
+	}
+
+	private String retrieveInputComponentValue_asString(UIComponent anchor,
+			String componentId) {
+		Object o = retrieveInputComponentValue(anchor, componentId);
+		return (o!=null?o.toString():null);
+	}
+
+	private boolean isValidBankAccountNumber(
+		String bankCode, String branchCode, String controlDigit, String accountNumber) {
+		String cd = getControlDigit(bankCode, branchCode, accountNumber);
+		return controlDigit.equals(cd);
 	}
 
 	private static Log _log = LogFactory.getLog(FieldValidatorBean.class);
