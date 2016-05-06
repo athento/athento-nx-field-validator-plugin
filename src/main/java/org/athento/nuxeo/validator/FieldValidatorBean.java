@@ -46,7 +46,6 @@ public class FieldValidatorBean implements Serializable {
 				"dcInputId");
 		String accountNumber = retrieveInputComponentValue_asString(component,
 				"accountNumberInputId");
-		
 		if (isValidBankAccountNumber(bankCode, branchCode, controlDigit, accountNumber)) {
 			// do nothing as the given string is well-formed
 			return;
@@ -58,7 +57,6 @@ public class FieldValidatorBean implements Serializable {
 							"label.error.validator.bank.account.number"), null);
 			throw new ValidatorException(message);
 		}
-
 	}
 
 	public void validateBankAccountNumber_allInOne(FacesContext context,
