@@ -4,6 +4,7 @@
 package org.athento.nuxeo.validator;
 
 import java.io.Serializable;
+import java.math.BigInteger;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -17,7 +18,12 @@ import javax.xml.bind.ValidationException;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.jboss.seam.ScopeType;
+import org.jboss.seam.annotations.Begin;
+import org.jboss.seam.annotations.Create;
+import org.jboss.seam.annotations.In;
 import org.jboss.seam.annotations.Name;
+import org.jboss.seam.annotations.Scope;
 import org.nuxeo.ecm.platform.ui.web.util.ComponentUtils;
 
 /**
@@ -25,9 +31,21 @@ import org.nuxeo.ecm.platform.ui.web.util.ComponentUtils;
  *
  */
 @Name("bFieldValidator")
+@Scope(ScopeType.CONVERSATION)
 public class FieldValidatorBean implements Serializable {
 
 	public static final String NIFletters = "TRWAGMYFPDXBNJZSQVHLCKET";
+
+	@In(create = true)
+	protected Map<String, String> messages;
+
+	@Begin(join = true)
+	@Create
+	public void init() {
+		if (_log.isDebugEnabled()) {
+			_log.debug("Initting bean");
+		}
+	}
 
 	public boolean accept() {
 		if (_log.isDebugEnabled()) {
@@ -36,8 +54,8 @@ public class FieldValidatorBean implements Serializable {
 		return true;
 	}
 
-	public void validateBankAccountNumber_byParts(FacesContext context, UIComponent component,
-			Object value) {
+	public void validateBankAccountNumber_byParts(FacesContext context,
+			UIComponent component, Object value) {
 		String bankCode = retrieveInputComponentValue_asString(component,
 				"bankCodeInputId");
 		String branchCode = retrieveInputComponentValue_asString(component,
@@ -46,7 +64,8 @@ public class FieldValidatorBean implements Serializable {
 				"dcInputId");
 		String accountNumber = retrieveInputComponentValue_asString(component,
 				"accountNumberInputId");
-		if (isValidBankAccountNumber(bankCode, branchCode, controlDigit, accountNumber)) {
+		if (isValidBankAccountNumber(bankCode, branchCode, controlDigit,
+				accountNumber)) {
 			// do nothing as the given string is well-formed
 			return;
 		} else {
@@ -70,7 +89,8 @@ public class FieldValidatorBean implements Serializable {
 		String controlDigit = ban.substring(8, 10);
 		String accountNumber = ban.substring(10, 20);
 
-		if (isValidBankAccountNumber(bankCode, branchCode, controlDigit, accountNumber)) {
+		if (isValidBankAccountNumber(bankCode, branchCode, controlDigit,
+				accountNumber)) {
 			// do nothing as the given string is well-formed
 			return;
 		} else {
@@ -118,6 +138,35 @@ public class FieldValidatorBean implements Serializable {
 					FacesMessage.SEVERITY_ERROR, ComponentUtils.translate(
 							context, "label.error.validator.homePhoneNumber"),
 					null);
+			throw new ValidatorException(message);
+		}
+	}
+
+	public void validateIBAN_PT(FacesContext context, UIComponent component,
+			Object value) {
+		if (_log.isDebugEnabled()) {
+			_log.debug("Validating IBAN PT: " + value);
+		}
+		// 1st step
+		String iban = value.toString().replaceAll("\\s", ""); // Clean blank
+																// spaces
+		iban = iban.replaceAll("[a-zA-Z]", "");
+
+		// 2nd & 3rd step
+		iban = iban + "252950"; // Form the 25 digit PT IBAN
+		// 4th step
+		BigInteger ibanD = new BigInteger(iban);
+		BigInteger mod = new BigInteger("97");
+		BigInteger rest = ibanD.remainder(mod);
+
+		if (rest.equals(new BigInteger("1"))) {
+			return;
+		} else {
+			// display an error in the input form
+			FacesMessage message = new FacesMessage(
+					FacesMessage.SEVERITY_ERROR, ComponentUtils.translate(
+							context,
+							"label.error.validator.bank.account.number"), null);
 			throw new ValidatorException(message);
 		}
 	}
@@ -292,11 +341,11 @@ public class FieldValidatorBean implements Serializable {
 	private String retrieveInputComponentValue_asString(UIComponent anchor,
 			String componentId) {
 		Object o = retrieveInputComponentValue(anchor, componentId);
-		return (o!=null?o.toString():null);
+		return (o != null ? o.toString() : null);
 	}
 
-	private boolean isValidBankAccountNumber(
-		String bankCode, String branchCode, String controlDigit, String accountNumber) {
+	private boolean isValidBankAccountNumber(String bankCode,
+			String branchCode, String controlDigit, String accountNumber) {
 		String cd = getControlDigit(bankCode, branchCode, accountNumber);
 		return controlDigit.equals(cd);
 	}
