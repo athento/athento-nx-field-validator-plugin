@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.athento.nuxeo</groupId>
 	<artifactId>athento-nx-field-validator</artifactId>
-	<version>1.1</version>
+	<version>1.2</version>
 	<name>athento-nx-field-validator</name>
 	<description />
 	<distributionManagement>
@@ -29,7 +29,7 @@
 				<artifactId>nuxeo-distribution</artifactId>
 				<scope>import</scope>
 				<type>pom</type>
-				<version>6.0-HF08</version>
+				<version>6.0-HF01</version>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
