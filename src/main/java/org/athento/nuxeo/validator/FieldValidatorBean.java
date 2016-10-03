@@ -273,11 +273,45 @@ public class FieldValidatorBean implements Serializable {
         }
     }
 
+    /**
+     * Validate a value for a regular expression.
+     *
+     * @param context
+     * @param component
+     * @param value
+     */
+    public void validateRegex(FacesContext context, UIComponent component,
+                             Object value) {
+        if (_log.isDebugEnabled()) {
+            _log.debug("Validating regex: " + value);
+        }
+        String theValue = (String) value;
+        // Check regex attribute
+        String regex = (String) component.getAttributes().get("regex");
+        if (!isValid(theValue, regex)) {
+            // display an error in the input form
+            FacesMessage message = new FacesMessage(
+                    FacesMessage.SEVERITY_ERROR, ComponentUtils.translate(
+                    context, "label.error.validator.text"), null);
+            throw new ValidatorException(message);
+        }
+    }
 
+    /**
+     * Check if a value is valid for a regex.
+     *
+     * @param value
+     * @param regexp
+     * @return
+     */
     private boolean isValid(String value, String regexp) {
         if (_log.isDebugEnabled()) {
             _log.debug("Validating [" + value + "] against regexp [" + regexp
                     + "]");
+        }
+        // Check regex is not null
+        if (regexp == null) {
+            return false;
         }
         Pattern pattern = Pattern.compile(regexp);
         Matcher matcher = pattern.matcher(value);
