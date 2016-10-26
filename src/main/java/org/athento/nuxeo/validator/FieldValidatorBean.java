@@ -288,8 +288,8 @@ public class FieldValidatorBean implements Serializable {
         String theValue = (String) value;
         // Check regex attribute
         String regex = (String) component.getAttributes().get("regex");
-        String optional = (String) component.getAttributes().get("optional");
-        if (!isValid(theValue, regex, optional)) {
+        boolean required = (Boolean) component.getAttributes().get("required");
+        if (!isValid(theValue, regex, required)) {
             // display an error in the input form
             FacesMessage message = new FacesMessage(
                     FacesMessage.SEVERITY_ERROR, ComponentUtils.translate(
@@ -306,7 +306,7 @@ public class FieldValidatorBean implements Serializable {
      * @return
      */
     private boolean isValid(String value, String regex) {
-        return isValid(value, regex, "true");
+        return isValid(value, regex, false);
     }
 
     /**
@@ -317,7 +317,7 @@ public class FieldValidatorBean implements Serializable {
      * @param required
      * @return
      */
-    private boolean isValid(String value, String regex, String required) {
+    private boolean isValid(String value, String regex, boolean required) {
         if (_log.isDebugEnabled()) {
             _log.debug("Validating [" + value + "] against regexp [" + regex
                     + "], required= " + required);
@@ -326,8 +326,7 @@ public class FieldValidatorBean implements Serializable {
         if (regex == null) {
             return false;
         }
-        boolean requiredValue = Boolean.valueOf(required);
-        if (requiredValue && (value == null || value.isEmpty())) {
+        if (required && (value == null || value.isEmpty())) {
             return true;
         }
         Pattern pattern = Pattern.compile(regex);
