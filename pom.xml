@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.athento.nuxeo</groupId>
 	<artifactId>athento-nx-field-validator</artifactId>
-	<version>1.3-SNAPSHOT</version>
+	<version>1.2.2.2</version>
 	<name>athento-nx-field-validator</name>
 	<description />
 	<distributionManagement>
