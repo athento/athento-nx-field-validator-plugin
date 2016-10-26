@@ -326,8 +326,8 @@ public class FieldValidatorBean implements Serializable {
         if (regex == null) {
             return false;
         }
-        if (required && (value == null || value.isEmpty())) {
-            return false;
+        if (!required && (value == null || value.isEmpty())) {
+            return true;
         }
         Pattern pattern = Pattern.compile(regex);
         Matcher matcher = pattern.matcher(value);
