@@ -288,7 +288,8 @@ public class FieldValidatorBean implements Serializable {
         String theValue = (String) value;
         // Check regex attribute
         String regex = (String) component.getAttributes().get("regex");
-        if (!isValid(theValue, regex)) {
+        String optional = (String) component.getAttributes().get("optional");
+        if (!isValid(theValue, regex, optional)) {
             // display an error in the input form
             FacesMessage message = new FacesMessage(
                     FacesMessage.SEVERITY_ERROR, ComponentUtils.translate(
@@ -298,22 +299,38 @@ public class FieldValidatorBean implements Serializable {
     }
 
     /**
-     * Check if a value is valid for a regex.
+     * Check if a valid value for a regex.
      *
      * @param value
-     * @param regexp
+     * @param regex
      * @return
      */
-    private boolean isValid(String value, String regexp) {
+    private boolean isValid(String value, String regex) {
+        return isValid(value, regex, "true");
+    }
+
+    /**
+     * Check if a valid value for a regex.
+     *
+     * @param value
+     * @param regex
+     * @param required
+     * @return
+     */
+    private boolean isValid(String value, String regex, String required) {
         if (_log.isDebugEnabled()) {
-            _log.debug("Validating [" + value + "] against regexp [" + regexp
-                    + "]");
+            _log.debug("Validating [" + value + "] against regexp [" + regex
+                    + "], required= " + required);
         }
         // Check regex is not null
-        if (regexp == null) {
+        if (regex == null) {
             return false;
         }
-        Pattern pattern = Pattern.compile(regexp);
+        boolean requiredValue = Boolean.valueOf(required);
+        if (requiredValue && (value == null || value.isEmpty())) {
+            return true;
+        }
+        Pattern pattern = Pattern.compile(regex);
         Matcher matcher = pattern.matcher(value);
         if (matcher.matches()) {
             if (_log.isDebugEnabled()) {
@@ -322,7 +339,7 @@ public class FieldValidatorBean implements Serializable {
             return true;
         } else {
             if (_log.isDebugEnabled()) {
-                _log.debug("Value do not match regular expression: " + regexp);
+                _log.debug("Value do not match regular expression: " + regex);
             }
             return false;
         }
