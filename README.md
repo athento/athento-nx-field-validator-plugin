@@ -29,6 +29,24 @@ Use it in your contribution (extensions.xml):
 	</widget>
 ```
 
+Example for regex validation:
+```xml
+	<widget name="Contract" type="text">
+		<labels>
+			<label mode="any">label.contract</label>
+		</labels>
+		<translated>true</translated>
+		<fields>
+			<field>MyApp:Contract</field>
+		</fields>
+		<properties widgetMode="edit">
+			<property name="validator">#{bFieldValidator.validateRegex}</property>
+			<property name="regex">\d+\/\d{4}$</property> 
+		</properties>
+	</widget>
+```
+
+
 ## Motivation
 
 There are a lot of common validations across any web application that could be centralized in one plugin to contribute to Nuxeo platform.
