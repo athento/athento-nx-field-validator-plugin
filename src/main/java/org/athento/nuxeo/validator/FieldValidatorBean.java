@@ -5,17 +5,22 @@ package org.athento.nuxeo.validator;
 
 import java.io.Serializable;
 import java.math.BigInteger;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.faces.application.FacesMessage;
 import javax.faces.component.UIComponent;
 import javax.faces.component.UIInput;
+import javax.faces.component.UIViewRoot;
+import javax.faces.component.visit.VisitCallback;
+import javax.faces.component.visit.VisitContext;
+import javax.faces.component.visit.VisitResult;
 import javax.faces.context.FacesContext;
 import javax.faces.validator.ValidatorException;
 import javax.xml.bind.ValidationException;
 
+import com.sun.faces.component.visit.FullVisitContext;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jboss.seam.ScopeType;
@@ -299,6 +304,54 @@ public class FieldValidatorBean implements Serializable {
     }
 
     /**
+     * Validate a value for a regular expression.
+     *
+     * @param context
+     * @param component
+     * @param value
+     */
+    public void isRequiredIf(FacesContext context, UIComponent component,
+                             Object value) {
+        if (_log.isDebugEnabled()) {
+            _log.debug("Validating required: " + value);
+        }
+        String theValue = (String) value;
+        // Check regex attribute
+        String regex = (String) component.getAttributes().get("regex");
+        // Takes the required field
+        String requiredField = (String) component.getAttributes().get("requiredField");
+
+        UIComponent componentFound = findComponent("nxw_" + requiredField);
+
+        if (componentFound != null) {
+            _log.debug("Componente encontrado: " + componentFound.getId());
+            UIInput requiredFieldComponent = (UIInput) componentFound;
+            Object requiredValue = new java.lang.String();
+            try {
+                requiredValue = requiredFieldComponent.getValue();
+                _log.info("Validating against component " + requiredField + ", with value: " + requiredValue
+                        + ", against regular expression: " + regex);
+            }
+            catch (Exception e){
+                _log.error("Error obtaining value from the required field. Validation will be skipped.");
+                _log.error("ERROR: " + e);
+            }
+            if (!isRequiredIfEvaluation(theValue, requiredField, (String) requiredValue, regex)) {
+                // display an error in the input form
+                FacesMessage message = new FacesMessage(
+                        FacesMessage.SEVERITY_ERROR, ComponentUtils.translate(
+                        context, "label.error.validator.text"), null);
+                throw new ValidatorException(message);
+            }
+
+        }
+        else {
+            _log.debug("Componente " + requiredField + " no encontrado.");
+        }
+
+    }
+
+    /**
      * Check if a valid value for a regex.
      *
      * @param value
@@ -341,6 +394,73 @@ public class FieldValidatorBean implements Serializable {
                 _log.debug("Value do not match regular expression: " + regex);
             }
             return false;
+        }
+    }
+
+    public UIComponent findComponent(final String id) {
+
+        FacesContext context = FacesContext.getCurrentInstance();
+        UIViewRoot root = context.getViewRoot();
+        final UIComponent[] found = new UIComponent[1];
+
+        root.visitTree(new FullVisitContext(context), new VisitCallback() {
+            @Override
+            public VisitResult visit(VisitContext context, UIComponent component) {
+                if(component.getId().equals(id)){
+                    found[0] = component;
+                    return VisitResult.COMPLETE;
+                }
+                return VisitResult.ACCEPT;
+            }
+        });
+
+        return found[0];
+
+    }
+
+    /**
+     * Check if a value is valid for a regex.
+     *
+     * @param value
+     * @param regexp
+     * @return
+     */
+    private boolean isRequiredIfEvaluation(String value, String requiredField, String requiredFieldValue, String regexp) {
+        if (_log.isDebugEnabled()) {
+            _log.info("Validating current field with value [" + value + "] is not null, if field [" + requiredField +
+                    "] with value [" + requiredFieldValue + "] accomplish regexp [" + regexp + "].");
+        }
+        // Check regex is not null
+        if (regexp == null) {
+            return false;
+        }
+
+        // Check requiredField is not null
+        if (requiredField == null) {
+            return false;
+        }
+
+        Pattern pattern = Pattern.compile(regexp);
+        Matcher matcher = pattern.matcher(requiredFieldValue);
+        if (matcher.matches()) {
+            if (value == null | value.equals("")) {
+                _log.info("Match successful for value and value is null: " + requiredFieldValue);
+                return false;
+            }
+            else {
+                if (_log.isDebugEnabled()) {
+                    _log.debug("Match successful for value and value is not null: " + requiredFieldValue);
+                }
+                return true;
+            }
+
+
+        } else {
+            if (_log.isDebugEnabled()) {
+                _log.debug("Value do not match regular expression: " + regexp);
+            }
+            _log.info("Value do not match regular expression: " + regexp);
+            return true;
         }
     }
 
@@ -440,6 +560,25 @@ public class FieldValidatorBean implements Serializable {
             return false;
         }
 
+    }
+
+    // Takes referenced component to check its value
+    private UIInput getReferencedComponent(String attribute, UIComponent component) {
+        Map<String, Object> attributes = component.getAttributes();
+
+        String targetComponentId = (String) attributes.get(attribute);
+
+        if (targetComponentId == null) {
+            LOG.error(String.format("Target component id (%s) not found in attributes", attribute));
+            return null;
+        }
+
+        UIInput targetComponent = (UIInput) component.findComponent(targetComponentId);
+        if (targetComponent == null) {
+            return null;
+        }
+
+        return targetComponent;
     }
 
     private static Log _log = LogFactory.getLog(FieldValidatorBean.class);
