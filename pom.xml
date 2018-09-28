@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.athento.nuxeo</groupId>
 	<artifactId>athento-nx-field-validator</artifactId>
-	<version>1.4-SNAPSHOT</version>
+	<version>3.0</version>
 	<name>athento-nx-field-validator</name>
 	<description />
 	<distributionManagement>
@@ -29,7 +29,7 @@
 				<artifactId>nuxeo-distribution</artifactId>
 				<scope>import</scope>
 				<type>pom</type>
-				<version>6.0-HF01</version>
+				<version>${nuxeo.platform.version}</version>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
@@ -159,7 +159,7 @@
 			<plugin>
 				<groupId>org.athento.nuxeo.plugin</groupId>
 				<artifactId>athento-nx-single-addon</artifactId>
-				<version>1.0</version>
+				<version>1.2</version>
 				<configuration>
 					<name>${project.artifactId}</name>
 					<version>${project.version}</version>
@@ -167,7 +167,7 @@
 						<url>http://www.athento.com</url>
 						<title>${project.name}</title>
 						<description>${project.description}</description>
-						<platform>cap-6.0</platform>
+						<platform>cap-${nuxeo.platform.version}</platform>
 					</properties>
 					<outputDir>addon</outputDir>
 				</configuration>
@@ -261,4 +261,8 @@
 			</snapshots>
 		</pluginRepository>
 	</pluginRepositories>
+
+	<properties>
+		<nuxeo.platform.version>8.10</nuxeo.platform.version>
+	</properties>
 </project>
