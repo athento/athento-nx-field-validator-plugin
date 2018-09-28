@@ -200,6 +200,26 @@ public class FieldValidatorBean implements Serializable {
         }
     }
 
+    public void validateColombiaMobilePhoneNumber(FacesContext context,
+                                          UIComponent component, Object value) {
+        if (_log.isDebugEnabled()) {
+            _log.debug("Validating CO mobilePhoneNumber: " + value);
+        }
+        String phoneNumber = (String) value;
+        String expression = "^3\\d{9}$";
+        if (isValid(phoneNumber, expression)) {
+            // do nothing as the given string is well-formed
+            return;
+        } else {
+            // display an error in the input form
+            FacesMessage message = new FacesMessage(
+                    FacesMessage.SEVERITY_ERROR,
+                    ComponentUtils.translate(context,
+                            "label.error.validator.celular"), null);
+            throw new ValidatorException(message);
+        }
+    }
+
     public void validateNIF(FacesContext context, UIComponent component,
                             Object value) {
         if (_log.isDebugEnabled()) {
